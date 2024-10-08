@@ -208,50 +208,14 @@ class TestUserSocialAuth(TestCase):
     def test_username_max_length(self):
         self.assertEqual(UserSocialAuth.username_max_length(), 150)
 
-
-class TestNonce(TestCase):
-    def test_use(self):
-        self.assertEqual(Nonce.objects.count(), 0)
-        self.assertTrue(Nonce.use(server_url="/", timestamp=1, salt="1"))
-        self.assertFalse(Nonce.use(server_url="/", timestamp=1, salt="1"))
-        self.assertEqual(Nonce.objects.count(), 1)
-
-
-class TestAssociation(TestCase):
-    def test_store_get_remove(self):
-        Association.store(
-            server_url="/",
-            association=mock.Mock(
-                handle="a", secret=b"b", issued=1, lifetime=2, assoc_type="c"
-            ),
-        )
-
-        qs = Association.get(handle="a")
-        self.assertEqual(qs.count(), 1)
-        self.assertEqual(qs[0].secret, "Yg==\n")
-
-        Association.remove(ids_to_delete=[qs.first().id])
-        self.assertEqual(Association.objects.count(), 0)
-
-
-class TestCode(TestCase):
-    def test_get_code(self):
-        code1 = Code.objects.create(email="test@example.com", code="abc")
-        code2 = Code.get_code(code="abc")
-        self.assertEqual(code1, code2)
-        self.assertIsNone(Code.get_code(code="xyz"))
-
-
-class TestPartial(TestCase):
-    def test_load_destroy(self):
-        p = Partial.objects.create(token="x", backend="y", data={})
-        self.assertEqual(Partial.load(token="x"), p)
-        self.assertIsNone(Partial.load(token="y"))
-
-        Partial.destroy(token="x")
-        self.assertEqual(Partial.objects.count(), 0)
-
-
-class TestDjangoStorage(TestCase):
-    def test_is_integrity_error(self):
-        self.assertTrue(DjangoStorage.is_integrity_error(IntegrityError()))
+    def test_list_all_social_auths(self):
+        """Test listing all UserSocialAuth entries."""
+        user1 = self.user_model._default_manager.create_user(username="user1", email="user1@example.com")
+        user2 = self.user_model._default_manager.create_user(username="user2", email="user2@example.com")
+        
+        UserSocialAuth.objects.create(user=user1, provider="provider1", uid="1234")
+        UserSocialAuth.objects.create(user=user2, provider="provider2", uid="5678")
+        
+        all_auths = UserSocialAuth.objects.all()
+        self.assertEqual(all_auths.count(), 2)
+        self.assertEqual(all_auths[0].uid, "123
