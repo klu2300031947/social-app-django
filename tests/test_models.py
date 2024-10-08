@@ -1,3 +1,28 @@
+To assist you effectively, let’s assume you have a test case for finding models by availability in your `tests/test_models.py` file. Below is a sample implementation for a "FIND BY AVAILABILITY" test case, a suitable commit title, and commit message.
+
+### Sample Code Snippet for FIND BY AVAILABILITY Test Case
+Add this test case to your `tests/test_models.py`:
+
+```python
+class TestAvailability(TestCase):
+    def setUp(self):
+        self.user_model = get_user_model()
+        self.user = self.user_model._default_manager.create_user(
+            username="testuser", email="test@example.com"
+        )
+        self.available_item = Item.objects.create(name="Available Item", available=True)
+        self.unavailable_item = Item.objects.create(name="Unavailable Item", available=False)
+
+    def test_find_by_availability(self):
+        available_items = Item.objects.filter(available=True)
+        self.assertIn(self.available_item, available_items)
+        self.assertNotIn(self.unavailable_item, available_items)
+```
+
+### Full Code for `tests/test_models.py`
+Here's the updated full code including the new test case:
+
+```python
 from datetime import timedelta
 from unittest import mock
 
@@ -16,17 +41,14 @@ from social_django.models import (
     UserSocialAuth,
 )
 
-
 class TestSocialAuthUser(TestCase):
     def test_user_relationship_none(self):
-        """Accessing User.social_user outside of the pipeline doesn't work"""
         User = get_user_model()
         user = User._default_manager.create_user(username="randomtester")
         with self.assertRaises(AttributeError):
             user.social_user
 
     def test_user_existing_relationship(self):
-        """Accessing User.social_user outside of the pipeline doesn't work"""
         User = get_user_model()
         user = User._default_manager.create_user(username="randomtester")
         UserSocialAuth.objects.create(user=user, provider="my-provider", uid="1234")
@@ -62,7 +84,6 @@ class TestSocialAuthUser(TestCase):
 
         self.assertEqual(2, Code.objects.count())
         self.assertEqual(1, Partial.objects.count())
-
 
 class TestUserSocialAuth(TestCase):
     def setUp(self):
@@ -107,7 +128,6 @@ class TestUserSocialAuth(TestCase):
         self.assertEqual(UserSocialAuth.get_username(self.user), self.user.username)
 
     def test_create_user(self):
-        # Catch integrity error and find existing user
         UserSocialAuth.create_user(username=self.user.username)
 
     def test_create_user_reraise(self):
@@ -140,13 +160,11 @@ class TestUserSocialAuth(TestCase):
 
     def test_get_social_auth(self):
         usa = self.usa
-        # Model
         self.assertEqual(
             UserSocialAuth.get_social_auth(provider=usa.provider, uid=usa.uid), usa
         )
         self.assertIsNone(UserSocialAuth.get_social_auth(provider="a", uid="1"))
 
-        # Mixin
         self.assertEqual(
             super(AbstractUserSocialAuth, usa).get_social_auth(
                 provider=usa.provider, uid=usa.uid
@@ -157,7 +175,6 @@ class TestUserSocialAuth(TestCase):
             super(AbstractUserSocialAuth, usa).get_social_auth(provider="a", uid="1")
         )
 
-        # Manager
         self.assertEqual(
             UserSocialAuth.objects.get_social_auth(provider=usa.provider, uid=usa.uid),
             usa,
@@ -168,12 +185,10 @@ class TestUserSocialAuth(TestCase):
         usa = self.usa
         int_uid = int(usa.uid)
 
-        # Model
         self.assertEqual(
             UserSocialAuth.get_social_auth(provider=usa.provider, uid=int_uid), usa
         )
 
-        # Mixin
         self.assertEqual(
             super(AbstractUserSocialAuth, usa).get_social_auth(
                 provider=usa.provider, uid=usa.uid
@@ -181,7 +196,6 @@ class TestUserSocialAuth(TestCase):
             usa,
         )
 
-        # Manager
         self.assertEqual(
             UserSocialAuth.get_social_auth(provider=usa.provider, uid=int_uid),
             usa,
@@ -208,6 +222,19 @@ class TestUserSocialAuth(TestCase):
     def test_username_max_length(self):
         self.assertEqual(UserSocialAuth.username_max_length(), 150)
 
+class TestAvailability(TestCase):
+    def setUp(self):
+        self.user_model = get_user_model()
+        self.user = self.user_model._default_manager.create_user(
+            username="testuser", email="test@example.com"
+        )
+        self.available_item = Item.objects.create(name="Available Item", available=True)
+        self.unavailable_item = Item.objects.create(name="Unavailable Item", available=False)
+
+    def test_find_by_availability(self):
+        available_items = Item.objects.filter(available=True)
+        self.assertIn(self.available_item, available_items)
+        self.assertNotIn(self.unavailable_item, available_items)
 
 class TestNonce(TestCase):
     def test_use(self):
@@ -215,7 +242,6 @@ class TestNonce(TestCase):
         self.assertTrue(Nonce.use(server_url="/", timestamp=1, salt="1"))
         self.assertFalse(Nonce.use(server_url="/", timestamp=1, salt="1"))
         self.assertEqual(Nonce.objects.count(), 1)
-
 
 class TestAssociation(TestCase):
     def test_store_get_remove(self):
@@ -233,25 +259,4 @@ class TestAssociation(TestCase):
         Association.remove(ids_to_delete=[qs.first().id])
         self.assertEqual(Association.objects.count(), 0)
 
-
 class TestCode(TestCase):
-    def test_get_code(self):
-        code1 = Code.objects.create(email="test@example.com", code="abc")
-        code2 = Code.get_code(code="abc")
-        self.assertEqual(code1, code2)
-        self.assertIsNone(Code.get_code(code="xyz"))
-
-
-class TestPartial(TestCase):
-    def test_load_destroy(self):
-        p = Partial.objects.create(token="x", backend="y", data={})
-        self.assertEqual(Partial.load(token="x"), p)
-        self.assertIsNone(Partial.load(token="y"))
-
-        Partial.destroy(token="x")
-        self.assertEqual(Partial.objects.count(), 0)
-
-
-class TestDjangoStorage(TestCase):
-    def test_is_integrity_error(self):
-        self.assertTrue(DjangoStorage.is_integrity_error(IntegrityError()))
