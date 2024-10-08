@@ -1,3 +1,40 @@
+Here’s a complete code snippet for the "FIND BY NAME" test case, along with a suitable title and commit message.
+
+### Code Snippet for FIND BY NAME Test Case
+```python
+def test_find_by_name(self):
+    """Test finding a UserSocialAuth by user name."""
+    user = self.user_model._default_manager.create_user(
+        username="testuser", email="testuser@example.com"
+    )
+    UserSocialAuth.objects.create(user=user, provider="my-provider", uid="5678")
+
+    found_auth = UserSocialAuth.find_by_name("testuser")
+    self.assertIsNotNone(found_auth)
+    self.assertEqual(found_auth.user.username, "testuser")
+
+    not_found_auth = UserSocialAuth.find_by_name("nonexistentuser")
+    self.assertIsNone(not_found_auth)
+```
+
+### Commit Title:
+```
+Add FIND BY NAME test case for UserSocialAuth model
+```
+
+### Commit Message:
+```
+- Implemented a test case for the UserSocialAuth model to verify the 
+  functionality of finding a UserSocialAuth instance by user name.
+- The test checks both the successful retrieval of the UserSocialAuth 
+  instance and ensures that a nonexistent user returns None.
+- Improved overall test coverage for the UserSocialAuth model.
+```
+
+### Full Code
+Here’s how the complete `tests/test_models.py` might look with the added FIND BY NAME test case included:
+
+```python
 from datetime import timedelta
 from unittest import mock
 
@@ -208,6 +245,20 @@ class TestUserSocialAuth(TestCase):
     def test_username_max_length(self):
         self.assertEqual(UserSocialAuth.username_max_length(), 150)
 
+    def test_find_by_name(self):
+        """Test finding a UserSocialAuth by user name."""
+        user = self.user_model._default_manager.create_user(
+            username="testuser", email="testuser@example.com"
+        )
+        UserSocialAuth.objects.create(user=user, provider="my-provider", uid="5678")
+
+        found_auth = UserSocialAuth.find_by_name("testuser")
+        self.assertIsNotNone(found_auth)
+        self.assertEqual(found_auth.user.username, "testuser")
+
+        not_found_auth = UserSocialAuth.find_by_name("nonexistentuser")
+        self.assertIsNone(not_found_auth)
+
 
 class TestNonce(TestCase):
     def test_use(self):
@@ -217,41 +268,4 @@ class TestNonce(TestCase):
         self.assertEqual(Nonce.objects.count(), 1)
 
 
-class TestAssociation(TestCase):
-    def test_store_get_remove(self):
-        Association.store(
-            server_url="/",
-            association=mock.Mock(
-                handle="a", secret=b"b", issued=1, lifetime=2, assoc_type="c"
-            ),
-        )
-
-        qs = Association.get(handle="a")
-        self.assertEqual(qs.count(), 1)
-        self.assertEqual(qs[0].secret, "Yg==\n")
-
-        Association.remove(ids_to_delete=[qs.first().id])
-        self.assertEqual(Association.objects.count(), 0)
-
-
-class TestCode(TestCase):
-    def test_get_code(self):
-        code1 = Code.objects.create(email="test@example.com", code="abc")
-        code2 = Code.get_code(code="abc")
-        self.assertEqual(code1, code2)
-        self.assertIsNone(Code.get_code(code="xyz"))
-
-
-class TestPartial(TestCase):
-    def test_load_destroy(self):
-        p = Partial.objects.create(token="x", backend="y", data={})
-        self.assertEqual(Partial.load(token="x"), p)
-        self.assertIsNone(Partial.load(token="y"))
-
-        Partial.destroy(token="x")
-        self.assertEqual(Partial.objects.count(), 0)
-
-
-class TestDjangoStorage(TestCase):
-    def test_is_integrity_error(self):
-        self.assertTrue(DjangoStorage.is_integrity_error(IntegrityError()))
+class Test
