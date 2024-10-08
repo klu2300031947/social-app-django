@@ -208,6 +208,10 @@ class TestUserSocialAuth(TestCase):
     def test_username_max_length(self):
         self.assertEqual(UserSocialAuth.username_max_length(), 150)
 
+    def test_disconnect_user_social_auth(self):
+        self.usa.disconnect()
+        self.assertFalse(UserSocialAuth.objects.filter(id=self.usa.id).exists())
+
 
 class TestNonce(TestCase):
     def test_use(self):
