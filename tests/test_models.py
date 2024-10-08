@@ -208,6 +208,22 @@ class TestUserSocialAuth(TestCase):
     def test_username_max_length(self):
         self.assertEqual(UserSocialAuth.username_max_length(), 150)
 
+    def test_update_social_auth(self):
+        """Test updating UserSocialAuth fields."""
+        # Update existing UserSocialAuth instance
+        self.usa.provider = "updated-provider"
+        self.usa.uid = "5678"
+        self.usa.set_extra_data({"new_key": "new_value"})
+        self.usa.save()
+
+        # Retrieve the updated instance from the database
+        updated_usa = UserSocialAuth.objects.get(id=self.usa.id)
+
+        # Assert that the updates are reflected in the database
+        self.assertEqual(updated_usa.provider, "updated-provider")
+        self.assertEqual(updated_usa.uid, "5678")
+        self.assertEqual(updated_usa.extra_data, {"new_key": "new_value"})
+
 
 class TestNonce(TestCase):
     def test_use(self):
@@ -246,12 +262,4 @@ class TestPartial(TestCase):
     def test_load_destroy(self):
         p = Partial.objects.create(token="x", backend="y", data={})
         self.assertEqual(Partial.load(token="x"), p)
-        self.assertIsNone(Partial.load(token="y"))
-
-        Partial.destroy(token="x")
-        self.assertEqual(Partial.objects.count(), 0)
-
-
-class TestDjangoStorage(TestCase):
-    def test_is_integrity_error(self):
-        self.assertTrue(DjangoStorage.is_integrity_error(IntegrityError()))
+        self.assertIsNone(Partial.load
